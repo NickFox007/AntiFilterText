@@ -3,7 +3,7 @@ bool checked[65];
 public Plugin myinfo = 
 {
 	name		= "AntiFilterText",
-	version		= "1.1",
+	version		= "1.1.1",
 	description	= "Bypass of ingame word-filter.",
 	author		= "NickFox",
 	url			= "https://vk.com/nf_dev"
@@ -12,20 +12,19 @@ public Plugin myinfo =
 public void OnPluginStart()
 {
 	HookUserMessage(GetUserMessageId("TextMsg"), TextMsgHook, true);
-	RegConsoleCmd("say",          Say);
-	RegConsoleCmd("say_team",     SayTeam);
 }
 
 char[] Replace(char sBuf[2048]){
 
-		ReplaceString(sBuf, sizeof(sBuf), "а", "a");
-		ReplaceString(sBuf, sizeof(sBuf), "о", "o");
-		ReplaceString(sBuf, sizeof(sBuf), "с", "c");
-		ReplaceString(sBuf, sizeof(sBuf), "е", "e");
-		ReplaceString(sBuf, sizeof(sBuf), "р", "p");
-		ReplaceString(sBuf, sizeof(sBuf), "у", "y");
-		ReplaceString(sBuf, sizeof(sBuf), "х", "x");
-		ReplaceString(sBuf, sizeof(sBuf), "п", "n");
+		ReplaceString(sBuf, sizeof(sBuf), "а", "ᎴаᎴ");
+		ReplaceString(sBuf, sizeof(sBuf), "о", "ᎴоᎴ");
+		ReplaceString(sBuf, sizeof(sBuf), "с", "ᎴсᎴ");
+		ReplaceString(sBuf, sizeof(sBuf), "е", "ᎴеᎴ");
+		ReplaceString(sBuf, sizeof(sBuf), "р", "ᎴрᎴ");
+		ReplaceString(sBuf, sizeof(sBuf), "у", "ᎴуᎴ");
+		ReplaceString(sBuf, sizeof(sBuf), "х", "ᎴхᎴ");
+		ReplaceString(sBuf, sizeof(sBuf), "п", "ᎴпᎴ");
+		ReplaceString(sBuf, sizeof(sBuf), "б", "ᎴбᎴ");
 		return sBuf;
 
 }
@@ -44,32 +43,20 @@ Action TextMsgHook(UserMsg iMsgId, Protobuf hMessage, const int[] iPlayers, int 
 	return Plugin_Continue;
 }
 
-public Action Say(client, args)
+public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
 {
 	if (checked[client]){
 		checked[client]=false;
 		return Plugin_Continue;
 	}
-	checked[client]=true;
 	
 	static char sBuffer[2048];
-	GetCmdArgString(sBuffer, sizeof(sBuffer));
-	Format(sBuffer,sizeof(sBuffer),"say %s",Replace(sBuffer));
-	FakeClientCommandEx(client, sBuffer);
-	return Plugin_Handled;
-}
-
-public Action SayTeam(client, args)
-{
-	if (checked[client]){
-		checked[client]=false;
-		return Plugin_Continue;
-	}
+	FormatEx(sBuffer,sizeof(sBuffer),"%s",sArgs);	
+	sBuffer=Replace(sBuffer);
+	if (StrContains(sArgs,"@")==0) return Plugin_Continue;
+	if (StrEqual(sArgs,sBuffer)) return Plugin_Continue;
+	Format(sBuffer,sizeof(sBuffer),"%s %s",command,sBuffer);
 	checked[client]=true;
-	
-	static char sBuffer[2048];
-	GetCmdArgString(sBuffer, sizeof(sBuffer));
-	Format(sBuffer,sizeof(sBuffer),"say_team %s",Replace(sBuffer));
 	FakeClientCommandEx(client, sBuffer);
-	return Plugin_Handled;
+	return Plugin_Stop;
 }

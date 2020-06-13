@@ -1,7 +1,9 @@
+bool checked[65];
+
 public Plugin myinfo = 
 {
 	name		= "AntiFilterText",
-	version		= "1.0",
+	version		= "1.1",
 	description	= "Bypass of ingame word-filter.",
 	author		= "NickFox",
 	url			= "https://vk.com/nf_dev"
@@ -10,7 +12,8 @@ public Plugin myinfo =
 public void OnPluginStart()
 {
 	HookUserMessage(GetUserMessageId("TextMsg"), TextMsgHook, true);
-	HookUserMessage(GetUserMessageId("SayText"), SayTextHook, true);
+	RegConsoleCmd("say",          Say);
+	RegConsoleCmd("say_team",     SayTeam);
 }
 
 char[] Replace(char sBuf[2048]){
@@ -27,7 +30,6 @@ char[] Replace(char sBuf[2048]){
 
 }
 
-
 Action TextMsgHook(UserMsg iMsgId, Protobuf hMessage, const int[] iPlayers, int iPlayersNum, bool bReliable, bool bInit)
 {
 	static char sBuffer[2048];
@@ -42,13 +44,32 @@ Action TextMsgHook(UserMsg iMsgId, Protobuf hMessage, const int[] iPlayers, int 
 	return Plugin_Continue;
 }
 
-Action SayTextHook(UserMsg iMsgId, Protobuf hMessage, const int[] iPlayers, int iPlayersNum, bool bReliable, bool bInit)
+public Action Say(client, args)
 {
+	if (checked[client]){
+		checked[client]=false;
+		return Plugin_Continue;
+	}
+	checked[client]=true;
+	
 	static char sBuffer[2048];
+	GetCmdArgString(sBuffer, sizeof(sBuffer));
+	Format(sBuffer,sizeof(sBuffer),"say %s",Replace(sBuffer));
+	FakeClientCommandEx(client, sBuffer);
+	return Plugin_Handled;
+}
 
-	hMessage.ReadString("text", sBuffer, sizeof(sBuffer));
+public Action SayTeam(client, args)
+{
+	if (checked[client]){
+		checked[client]=false;
+		return Plugin_Continue;
+	}
+	checked[client]=true;
 	
-	hMessage.SetString("text", Replace(sBuffer));
-	
-	return Plugin_Continue;
+	static char sBuffer[2048];
+	GetCmdArgString(sBuffer, sizeof(sBuffer));
+	Format(sBuffer,sizeof(sBuffer),"say_team %s",Replace(sBuffer));
+	FakeClientCommandEx(client, sBuffer);
+	return Plugin_Handled;
 }
